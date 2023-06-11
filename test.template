@@ -1,0 +1,7 @@
+{{ switch $.event.op }}
+{{ case "INSERT" }}
+{"test": "test"}
+{{ default }}
+{"error": "unknown operation"}
+{{ end }}
+{{ end }}

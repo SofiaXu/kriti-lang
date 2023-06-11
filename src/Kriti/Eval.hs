@@ -156,6 +156,17 @@ evalWith funcMap = \case
           [] -> eval elseExpr -- Further no elif expression found, evaluate else expression
           ((Elif s cond expr) : restElifs) -> evalCond s cond expr (evalElifs restElifs)
     evalCond sp ifCond ifExpr (evalElifs (V.toList elifs))
+  Switch sp switchExpr cases defaultExpr -> do
+    src <- asks fst
+    switchVal <- eval switchExpr
+    let evalCases = \case
+          [] -> eval defaultExpr -- Further no case expression found, evaluate default expression
+          ((Case s caseExpr expr) : restCases) -> do
+            caseVal <- eval caseExpr
+            if switchVal == caseVal
+              then eval expr
+              else evalCases restCases
+    evalCases (V.toList cases)
   Eq _ t1 t2 -> do
     res <- (==) <$> eval t1 <*> eval t2
     pure $ J.Bool res

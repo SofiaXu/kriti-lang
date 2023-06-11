@@ -44,6 +44,9 @@ string      { TokStringLit $$ }
 'range'     { TokIdentifier (Loc $$ "range") }
 'in'        { TokIdentifier (Loc $$ "in") }
 'not'       { TokIdentifier (Loc $$ "not") }
+'switch'    { TokIdentifier (Loc $$ "switch") }
+'case'      { TokIdentifier (Loc $$ "case") }
+'default'   { TokIdentifier (Loc $$ "default") }
 ident       { TokIdentifier $$ }
 
 '\''        { TokSymbol (Loc $$ SymSingleQuote) }
@@ -167,6 +170,19 @@ elif_exprs
 elif_expr :: { Elif }
 elif_expr
   : '{{' 'elif' expr '}}' expr { Elif (locate $2 <> locate $3) $3 $5 }
+
+switch :: { ValueExt }
+switch
+  : '{{' 'switch' expr '}}' case_exprs '{{' 'default' '}}' expr '{{' 'end' '}}' { Switch (locate $1 <> locate $12) $3 $5 $9 }
+
+case_exprs :: { V.Vector Case }
+case_exprs
+  : {- empty -} { V.empty }
+  | case_exprs case_expr { V.snoc $1 $2 }
+
+case_expr :: { Case }
+case_expr
+  : '{{' 'case' expr '}}' expr { Case (locate $2 <> locate $3) $3 $5 }
 
 ------------------------------------------------------------------------
 

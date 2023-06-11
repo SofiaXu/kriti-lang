@@ -115,6 +115,17 @@ instance Pretty Elif where
         indent 2 $ pretty t
       ]
 
+-- | The case conditional expression
+data Case = Case Span ValueExt ValueExt
+  deriving (Show, Eq, Read, Generic)
+
+instance Pretty Case where
+  pretty (Case _ c t) =
+    vsep
+      [ "{{" <+> "case" <+> pretty c <+> "}}",
+        indent 2 $ pretty t
+      ]
+
 -- | The Kriti AST type. Kriti templates are parsed into `ValueExt`
 -- terms which are then evaluated and converted into Aeson `Value`
 -- terms.
@@ -130,6 +141,7 @@ data ValueExt
   | RequiredFieldAccess Span ValueExt (Either T.Text ValueExt)
   | OptionalFieldAccess Span ValueExt [Either T.Text ValueExt]
   | Iff Span ValueExt ValueExt (V.Vector Elif) ValueExt
+  | Switch Span ValueExt (V.Vector Case) ValueExt
   | Eq Span ValueExt ValueExt
   | NotEq Span ValueExt ValueExt
   | Gt Span ValueExt ValueExt
@@ -158,6 +170,7 @@ instance Located ValueExt where
     RequiredFieldAccess s _ _ -> s
     OptionalFieldAccess s _ _ -> s
     Iff s _ _ _ _ -> s
+    Switch s _ _ _ -> s
     Eq s _ _ -> s
     NotEq s _ _ -> s
     Gt s _ _ -> s
@@ -202,6 +215,14 @@ instance Pretty ValueExt where
                indent 2 $ pretty t2,
                "{{" <+> "end" <+> "}}"
              ]
+    Switch _ p cases default_expr ->
+      vsep $
+        [ "{{" <+> "switch" <+> pretty p <+> "}}",
+          indent 2 $ vsep $ map pretty (V.toList cases),
+          "{{" <+> "default" <+> "}}",
+          indent 2 $ pretty default_expr,
+          "{{" <+> "end" <+> "}}"
+        ]
     Eq _ t1 t2 -> pretty t1 <+> equals <+> pretty t2
     NotEq _ t1 t2 -> pretty t1 <+> "!=" <+> pretty t2
     Gt _ t1 t2 -> pretty t1 <+> ">" <+> pretty t2
